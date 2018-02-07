@@ -98,7 +98,7 @@ def main():
     hsf = HandSignFilter(canvas, KINECT_DEPTH_INT)
 
     # record handsigns to..
-    recordpath = datetime.now().strftime("records/record-%Y-%m-%d_%H:%M:%S.csv")
+    recordpath = datetime.now().strftime("assets/records/record-%Y-%m-%d_%H:%M:%S.csv")
 
     with open(recordpath, "a") as recorder, nui.Runtime() as kinect:
         kinect.depth_frame_ready += hsf.on_depth_frame
