@@ -98,7 +98,7 @@ def main():
     hsf = HandSignFilter(canvas, KINECT_DEPTH_INT)
 
     # record handsigns to..
-    recordpath = datetime.now().strftime("assets/records/record-%Y-%m-%d_%H:%M:%S.csv")
+    recordpath = datetime.now().strftime("assets/records/record-%Y-%m-%d-%H-%M-%S.csv")
 
     with open(recordpath, "a") as recorder, nui.Runtime() as kinect:
         kinect.depth_frame_ready += hsf.on_depth_frame
@@ -124,7 +124,8 @@ def main():
                 recorder.write(csv_line)
                 print('stored data point: %s' % csv_line)
 
-            elif event.type == pygame.QUIT:
+            elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE or \
+                 event.type == pygame.QUIT:
                 pygame.quit()
                 break
 
