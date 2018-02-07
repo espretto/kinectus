@@ -2,6 +2,7 @@
 from __future__ import division
 from pykinect import nui
 from skimage.measure import label, regionprops
+from datetime import datetime
 import math
 import numpy as np
 import pygame
@@ -23,7 +24,7 @@ KEY_HANDSIGN_MAP[pygame.K_c] = "ciseaux"
 KEY_HANDSIGN_MAP[pygame.K_f] = "feuille"
 
 # ------------------------------------------------------------------------------
-# data point: feature vector
+# data point / feature vector
 
 class DataPoint (object):
 
@@ -96,9 +97,10 @@ def main():
     # create frame handler
     hsf = HandSignFilter(canvas, KINECT_DEPTH_INT)
 
-    # launch kinect capture stream
-    # create outfile
-    with open("records.csv", "a") as records, nui.Runtime() as kinect:
+    # record handsigns to..
+    recordpath = datetime.now().strftime("records/record-%Y-%m-%d_%H:%M:%S.csv")
+
+    with open(recordpath, "a") as recorder, nui.Runtime() as kinect:
         kinect.depth_frame_ready += hsf.on_depth_frame
         
         kinect.depth_stream.open(
@@ -111,14 +113,16 @@ def main():
         while True:
             event = pygame.event.wait()
 
-            if event.type == pygame.KEYUP:
-                if event.key in KEY_SIGN_MAP:
-                    sign = KEY_SIGN_MAP[event.key]
-                    data_point = DataPoint.from_frame(hsf.frame)
-                    if data_point:
-                        csv_line = data_point.to_csv_line(sign)
-                        print('stored data point: %s' % csv_line)
-                        records.write(csv_line)
+            if event.type == pygame.KEYUP and event.key in KEY_HANDSIGN_MAP:
+                handsign = KEY_HANDSIGN_MAP[event.key]
+                data_point = DataPoint.from_frame(hsf.frame)
+                
+                if not data_point:
+                    continue
+
+                csv_line = data_point.to_csv_line(handsign)
+                recorder.write(csv_line)
+                print('stored data point: %s' % csv_line)
 
             elif event.type == pygame.QUIT:
                 pygame.quit()

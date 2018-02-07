@@ -19,7 +19,7 @@ Corriger une erreur dans `%USERPROFILE%\Envs\imagerie\Lib\site-packages\pykinect
 
 Finalement, vous pouver executer l'application
 ```
-start cmd /c python testgame.py
+start cmd /c python kinectus.py
 ```
 
 [1]: https://www.microsoft.com/en-us/download/confirmation.aspx?id=40278
