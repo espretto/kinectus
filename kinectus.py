@@ -5,11 +5,14 @@ import csv
 import math
 import logging
 from datetime import datetime
+from os.path import exists
 
 import pygame
 import numpy as np
 from pykinect import nui
 from skimage.measure import label, regionprops
+
+from evaluate import points_per_label, centroid_from_points
 
 # ------------------------------------------------------------------------------
 # constants & config
@@ -23,6 +26,8 @@ KINECT_DEPTH_INT = (0, 8000)
 KINECT_CANVAS_SIZE = (320, 240)
 KINECT_FRAME_LIMIT = 2
 KINECT_PIXEL_DEPTH = 16
+KINECT_FONT_SIZE = 16
+KINECT_FONT_COLOR = (255, 255, 255)
 
 KEY_HANDSIGN_MAP = {}
 KEY_HANDSIGN_MAP[pygame.K_p] = "pierre"
@@ -30,40 +35,55 @@ KEY_HANDSIGN_MAP[pygame.K_c] = "ciseaux"
 KEY_HANDSIGN_MAP[pygame.K_f] = "feuille"
 
 # ------------------------------------------------------------------------------
-# data point / feature vector
+# features vector helpers
 
-class Features (object):
+def point_from_frame (frame):
+    frame = label(frame)
+    regions = regionprops(frame)
 
-    CIRCULARITY = 0
-    ELLIPTICITY = 1
-    CONVEXIVITY = 2
+    if regions:
+        props = max(regions, key=lambda region: region.area)
 
-    @staticmethod
-    def from_frame (frame):
-        frame = label(frame)
-        regions = regionprops(frame)
+        return np.array([
+            # cirularity
+            4 * math.pi * props.area / props.perimeter ** 2 if props.perimeter else -1,
+            # ellipticity
+            props.minor_axis_length / props.major_axis_length if props.major_axis_length else -1,
+            # convexivity
+            props.convex_area / props.area if props.area else -1
+        ])
 
-        if regions:
-            props = max(regions, key=lambda region: region.area)
+def classify_point (point, centroids):
+    min_dist = float("inf")
+    min_label = "unknown"
+    
+    # find centroid with minimum distance
+    for label, centroid in centroids.iteritems():
+        dist = np.linalg.norm(point-centroid)
+        if dist < min_dist:
+            min_dist = dist
+            min_label = label
 
-            return np.array([
-                4 * math.pi * props.area / props.perimeter ** 2 if props.perimeter else -1,
-                props.minor_axis_length / props.major_axis_length if props.major_axis_length else -1,
-                props.convex_area / props.area if props.area else -1
-            ])
+    return min_label 
 
 # ------------------------------------------------------------------------------
 # frame processing middleware
 
 class HandSignFilter (object):
 
-    def __init__(self, canvas, interval):
+    def __init__(self, canvas, interval, centroids={}):
+        self.font = pygame.font.SysFont('Arial', KINECT_FONT_SIZE)
+        self.point = None
         self.frame = None
         self.canvas = canvas
         self.inverse_shape = canvas.get_size()[::-1]
         self.interval = interval
+        self.centroids = centroids
 
     def on_depth_frame (self, depth_frame):
+        if self.canvas.get_locked():
+            return
+
         # convert kinect frame to numpy ndarray
         frame = np.frombuffer(depth_frame.image.bits, dtype=np.uint16)
 
@@ -76,11 +96,18 @@ class HandSignFilter (object):
         predicate = (lower < frame) & (frame < upper)
         frame = np.where(predicate, UINT16_MAX, UINT16_MIN)
 
-        # set last frame
+        # set and draw the frame
         self.frame = frame
-
-        # update canvas
         pygame.pixelcopy.array_to_surface(self.canvas, frame)
+
+        # set and draw point and its category
+        self.point = point_from_frame(self.frame)
+        if self.point is not None:
+            label = classify_point(self.point, self.centroids)
+            text = self.font.render(label, True, KINECT_FONT_COLOR)
+            self.canvas.blit(text, (KINECT_FONT_SIZE, KINECT_FONT_SIZE))
+
+        # update pygame surface
         pygame.display.update()
 
     def on_depth_frame_simple (self, depth_frame):
@@ -90,8 +117,17 @@ class HandSignFilter (object):
 # ------------------------------------------------------------------------------
 # frame processing middleware
 
-def main():
-    
+def main(train_dump):
+
+    # read training data for estimates
+    if exists(train_dump):
+        logging.info('using centroids from : %s' % train_dump)
+        centroids = { label: centroid_from_points(points) \
+            for label, points in points_per_label(train_dump).iteritems() }
+    else:
+        logging.info('no training data available')
+        centroids = None
+        
     # create pygame canvas
     logging.debug('initializing pygame')
     pygame.init()
@@ -99,9 +135,9 @@ def main():
     canvas = pygame.display.set_mode(KINECT_CANVAS_SIZE, 0, KINECT_PIXEL_DEPTH)
 
     # create frame handler
-    hsf = HandSignFilter(canvas, KINECT_DEPTH_INT)
+    hsf = HandSignFilter(canvas, KINECT_DEPTH_INT, centroids)
 
-    # record handsigns to..
+    # record handsigns to
     recordpath = datetime.now().strftime("assets/records/%Y-%m-%d-%H-%M-%S.record.csv")
     logging.info('records path : %s' % recordpath)
 
@@ -122,14 +158,11 @@ def main():
             event = pygame.event.wait()
 
             if event.type == pygame.KEYUP and event.key in KEY_HANDSIGN_MAP:
-                handsign = KEY_HANDSIGN_MAP[event.key]
-                features = Features.from_frame(hsf.frame)
-                
-                if features is None:
+                if hsf.point is None:
                     continue
-
-                row = [handsign]
-                row.extend(["%.6f" % feature for feature in features])
+                
+                row = [KEY_HANDSIGN_MAP[event.key]]
+                row.extend(["%.6f" % feature for feature in hsf.point])
 
                 writer.writerow(row)
                 logging.info('recorded data point: %s' % ";".join(row))
@@ -141,4 +174,4 @@ def main():
                 break
 
 if __name__ == "__main__":
-    main()
+    main('assets/records/2018-02-07-15-59-54.record.csv')
