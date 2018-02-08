@@ -1,14 +1,20 @@
 
 from __future__ import division
+
+import csv
+import math
+import logging
+from datetime import datetime
+
+import pygame
+import numpy as np
 from pykinect import nui
 from skimage.measure import label, regionprops
-from datetime import datetime
-import math
-import numpy as np
-import pygame
 
 # ------------------------------------------------------------------------------
 # constants & config
+
+logging.basicConfig(level=logging.DEBUG)
 
 UINT16_MIN = 0
 UINT16_MAX = 65535
@@ -26,20 +32,11 @@ KEY_HANDSIGN_MAP[pygame.K_f] = "feuille"
 # ------------------------------------------------------------------------------
 # data point / feature vector
 
-class DataPoint (object):
+class Features (object):
 
-    def __init__ (self, region_props):
-        self.circularity = 4 * math.pi * region_props.area / region_props.perimeter ** 2 if region_props.perimeter else -1
-        self.ellipticity = region_props.minor_axis_length / region_props.major_axis_length if region_props.major_axis_length else -1
-        self.convexivity = region_props.convex_area / region_props.area if region_props.area else -1
-
-    def to_csv_line (self, sign):
-        return "%s;%f;%f;%f\n" % (
-            sign,
-            self.circularity,
-            self.ellipticity,
-            self.convexivity
-            )
+    CIRCULARITY = 0
+    ELLIPTICITY = 1
+    CONVEXIVITY = 2
 
     @staticmethod
     def from_frame (frame):
@@ -47,8 +44,13 @@ class DataPoint (object):
         regions = regionprops(frame)
 
         if regions:
-            region_props = max(regions, key=lambda region: region.area)
-            return DataPoint(region_props)
+            props = max(regions, key=lambda region: region.area)
+
+            return np.array([
+                4 * math.pi * props.area / props.perimeter ** 2 if props.perimeter else -1,
+                props.minor_axis_length / props.major_axis_length if props.major_axis_length else -1,
+                props.convex_area / props.area if props.area else -1
+            ])
 
 # ------------------------------------------------------------------------------
 # frame processing middleware
@@ -58,6 +60,7 @@ class HandSignFilter (object):
     def __init__(self, canvas, interval):
         self.frame = None
         self.canvas = canvas
+        self.inverse_shape = canvas.get_size()[::-1]
         self.interval = interval
 
     def on_depth_frame (self, depth_frame):
@@ -65,7 +68,7 @@ class HandSignFilter (object):
         frame = np.frombuffer(depth_frame.image.bits, dtype=np.uint16)
 
         # inverse shape, then swap axes
-        frame.shape = self.canvas.get_size()[::-1]
+        frame.shape = self.inverse_shape
         frame = np.swapaxes(frame, 0, 1)
 
         # filter by distance
@@ -90,6 +93,7 @@ class HandSignFilter (object):
 def main():
     
     # create pygame canvas
+    logging.debug('initializing pygame')
     pygame.init()
     pygame.display.set_caption("Pierre-Feuille-Ciseaux")
     canvas = pygame.display.set_mode(KINECT_CANVAS_SIZE, 0, KINECT_PIXEL_DEPTH)
@@ -98,11 +102,15 @@ def main():
     hsf = HandSignFilter(canvas, KINECT_DEPTH_INT)
 
     # record handsigns to..
-    recordpath = datetime.now().strftime("assets/records/record-%Y-%m-%d-%H-%M-%S.csv")
+    recordpath = datetime.now().strftime("assets/records/%Y-%m-%d-%H-%M-%S.record.csv")
+    logging.info('records path : %s' % recordpath)
 
-    with open(recordpath, "a") as recorder, nui.Runtime() as kinect:
+    with open(recordpath, "wb") as record, nui.Runtime() as kinect:
+
+        writer = csv.writer(record, delimiter=';')
+
+        logging.debug('initializing kinect stream')
         kinect.depth_frame_ready += hsf.on_depth_frame
-        
         kinect.depth_stream.open(
             nui.ImageStreamType.Depth,
             KINECT_FRAME_LIMIT,
@@ -115,17 +123,20 @@ def main():
 
             if event.type == pygame.KEYUP and event.key in KEY_HANDSIGN_MAP:
                 handsign = KEY_HANDSIGN_MAP[event.key]
-                data_point = DataPoint.from_frame(hsf.frame)
+                features = Features.from_frame(hsf.frame)
                 
-                if not data_point:
+                if features is None:
                     continue
 
-                csv_line = data_point.to_csv_line(handsign)
-                recorder.write(csv_line)
-                print('stored data point: %s' % csv_line)
+                row = [handsign]
+                row.extend(["%.6f" % feature for feature in features])
+
+                writer.writerow(row)
+                logging.info('recorded data point: %s' % ";".join(row))
 
             elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE or \
                  event.type == pygame.QUIT:
+                logging.debug('exiting pygame')
                 pygame.quit()
                 break
 
