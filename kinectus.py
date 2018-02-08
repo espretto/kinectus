@@ -71,7 +71,7 @@ def classify_point (point, centroids):
 
 class HandSignFilter (object):
 
-    def __init__(self, canvas, interval, centroids={}):
+    def __init__(self, canvas, interval, centroids):
         self.font = pygame.font.SysFont('Arial', KINECT_FONT_SIZE)
         self.point = None
         self.frame = None
@@ -126,7 +126,7 @@ def main(train_dump):
             for label, points in points_per_label(train_dump).iteritems() }
     else:
         logging.info('no training data available')
-        centroids = None
+        centroids = {}
         
     # create pygame canvas
     logging.debug('initializing pygame')
@@ -174,4 +174,4 @@ def main(train_dump):
                 break
 
 if __name__ == "__main__":
-    main('assets/records/2018-02-07-15-59-54.record.csv')
+    main('assets/records/samples.csv')
