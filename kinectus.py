@@ -176,5 +176,8 @@ def main(train_dump):
                 pygame.quit()
                 break
 
+# ------------------------------------------------------------------------------
+# kickoff
+
 if __name__ == "__main__":
     main('assets/samples.csv')
