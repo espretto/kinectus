@@ -1,24 +1,24 @@
 
 Kinectus
 ---
-Kinectus est une application de reconnaissance d'image. Plus spécifiquement, elle reconnait les signes de la main du jeu pierre-feuille-papier à l'aide d'une camera XBOX 360 Kinect. La reconnaissance repose sur le calcul de trois critères, dits features, basés sur des mesures d'une forme d'un signe de la main. Ces trois features constituent un points dans un espace 3D, car trois features:
+Kinectus est une application de reconnaissance d'images. Plus spécifiquement, elle reconnait les signes de la main du jeu pierre-feuille-ciseaux à l'aide d'une Kinect XBOX 360. La reconnaissance repose sur le calcul de trois critères, dits features, basés sur les mesures prises à partir des signes de la main. Ces trois features constituent un point dans un espace 3D. Celles-ci sont:
 
-1. La circularité : 4pi * surface / perimetre ^ 2
-2. L'ellipticité : la plus courte axe / la plus longe axe
-3. La convexivité : le surface convexe / le surface effectif
+1. La circularité : 4pi * surface / périmetre ^ 2
+2. L'ellipticité : l'axe le plus court / l'axe le plus long
+3. La convexivité : la surface convexe / la surface effective
 
-On ne peut reconnaître ce qu'on n'a jamais vu avant. Afin de faire de l'expérience, l'application permet d'enregistrer de points qui correspondent aux signes "pierre", "feuille" et "papier". Un groupe de vecteurs de features par forme, peut être consideré comme un nuage de points. Son centroide sert comme point de référence pour la reconnaissance.
+On ne peut reconnaître ce qu'on n'a jamais vu avant. Afin de concevoir une base de référence, l'application permet d'enregistrer des points qui correspondent aux signes "pierre", "feuille" et "ciseaux". Chaque nuage de points distinct peut être considéré comme un ensemble de vecteurs de features(soit de formes). Son centroide sert de point de référence pour la reconnaissance.
 
-Préréquis
+Prérequis
 ---
-L'application necessite l'installation des logiciels suivants :
+L'application nécessite l'installation des logiciels suivants :
 
 - [Kinect for Windows SDK v1.8][1]
 - [Kinect for Windows Developer Toolkit v1.8][2]
 - [python 2.7.14][5] (cocher l'option "ajouter au PATH")
 - [Microsoft Visual C++ Compiler for Python 2.7][3] (pour compiler scikit-image)
 
-Malheureusement, le compilateur C++ manque le fichier `stdint.h` (voir `assets`). Copiez-le dans le dossier `%USERPROFILE%\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC\include\` comme l'indique [cette réponse sur stackoverflow][4].
+Malheureusement, le compilateur C++ ne dispose pas du fichier `stdint.h` (voir `assets`). Copiez-le dans le dossier `%USERPROFILE%\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC\include\` comme l'indique [cette réponse sur stackoverflow][4].
 
 Installation
 ---
@@ -31,14 +31,14 @@ pip install numpy # réquis par scikit-image
 pip install -r requirements.txt
 ```
 
-Le module `pykinect@2.1` contient une erreur. Dans le dossier de votre environnement virtuel, modifier le module `Lib/site-packages/pykinect/nui/struct.py` sur la ligne `212` : Remplacer `return desc.height.value` par `return desc.height`. [Un issue correspondant][6] a déjà été créé.
+Le module `pykinect@2.1` contient une erreur. Dans le dossier de votre environnement virtuel, modifier le module `Lib/site-packages/pykinect/nui/struct.py` sur la ligne `213` : Remplacer `return desc.height.value` par `return desc.height`. [Un issue correspondant][6] a déjà été créé.
 
 Utilisation
 ---
 L'application offre deux scripts : `kinectus.py` et `evaluate.py`.
 
-### Faire de l'expérience
-Branchez la camera et lancer le script suivant:
+### Création d'une base de référence
+Branchez la camera et lancez le script suivant:
 ```sh
 python kinectus.py
 ```
@@ -46,7 +46,7 @@ Un fenêtre pygame va s'ouvrir et afficher le flux d'images filtrés provenant d
 - `p` pour enregistrer un pierre
 - `c` pour enregistrer des ciseaux
 - `f` pour enregistrer une feuille
-Les données ainsi enregistrées, sont écrites dans le dossier `./assets/samples`.
+Les données ainsi enregistrées sont écrites dans le dossier `./assets/samples`.
 
 ### Evaluer les données
 Le deuxième script permet d'afficher les nuages de points précédemment enregistrés dans un système de coordonnées à trois dimensions.
