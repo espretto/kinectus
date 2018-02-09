@@ -75,7 +75,7 @@ def main (recordpath):
 # kickoff
 
 if __name__ == '__main__':
-    main('assets/records/samples.csv')
+    main('assets/samples.csv')
 
             
 

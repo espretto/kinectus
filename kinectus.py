@@ -26,8 +26,9 @@ KINECT_DEPTH_INT = (0, 8000)
 KINECT_CANVAS_SIZE = (320, 240)
 KINECT_FRAME_LIMIT = 2
 KINECT_PIXEL_DEPTH = 16
-KINECT_FONT_SIZE = 16
-KINECT_FONT_COLOR = (255, 255, 255)
+
+PYGAME_FONT_SIZE = 16
+PYGAME_FONT_COLOR = (255, 255, 255)
 
 KEY_HANDSIGN_MAP = {}
 KEY_HANDSIGN_MAP[pygame.K_p] = "pierre"
@@ -72,7 +73,7 @@ def classify_point (point, centroids):
 class HandSignFilter (object):
 
     def __init__(self, canvas, interval, centroids):
-        self.font = pygame.font.SysFont('Arial', KINECT_FONT_SIZE)
+        self.font = pygame.font.SysFont('Arial', PYGAME_FONT_SIZE)
         self.point = None
         self.frame = None
         self.canvas = canvas
@@ -104,8 +105,8 @@ class HandSignFilter (object):
         self.point = point_from_frame(self.frame)
         if self.point is not None:
             label = classify_point(self.point, self.centroids)
-            text = self.font.render(label, True, KINECT_FONT_COLOR)
-            self.canvas.blit(text, (KINECT_FONT_SIZE, KINECT_FONT_SIZE))
+            text = self.font.render(label, True, PYGAME_FONT_COLOR)
+            self.canvas.blit(text, (PYGAME_FONT_SIZE, PYGAME_FONT_SIZE))
 
         # update pygame surface
         pygame.display.update()
@@ -138,9 +139,10 @@ def main(train_dump):
     hsf = HandSignFilter(canvas, KINECT_DEPTH_INT, centroids)
 
     # record handsigns to
-    recordpath = datetime.now().strftime("assets/records/%Y-%m-%d-%H-%M-%S.record.csv")
-    logging.info('records path : %s' % recordpath)
+    recordpath = datetime.now().strftime("assets/samples/%Y-%m-%d-%H-%M-%S.samples.csv")
+    logging.info('samples path : %s' % recordpath)
 
+    # open ressources
     with open(recordpath, "wb") as record, nui.Runtime() as kinect:
 
         writer = csv.writer(record, delimiter=';')
@@ -154,6 +156,7 @@ def main(train_dump):
             nui.ImageType.Depth
             )
 
+        # game event loop
         while True:
             event = pygame.event.wait()
 
@@ -174,4 +177,4 @@ def main(train_dump):
                 break
 
 if __name__ == "__main__":
-    main('assets/records/samples.csv')
+    main('assets/samples.csv')
