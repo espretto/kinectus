@@ -12,14 +12,14 @@ from mpl_toolkits.mplot3d import Axes3D
 # config & constants
 
 LABEL_COLOR_MAP = {}
-LABEL_COLOR_MAP['pierre'] = 'xkcd:pink'
-LABEL_COLOR_MAP['feuille'] = 'xkcd:light green'
-LABEL_COLOR_MAP['ciseaux'] = 'xkcd:light blue'
+LABEL_COLOR_MAP["pierre"] = "xkcd:pink"
+LABEL_COLOR_MAP["feuille"] = "xkcd:light green"
+LABEL_COLOR_MAP["ciseaux"] = "xkcd:light blue"
 
 CENTROID_COLOR_MAP = {}
-CENTROID_COLOR_MAP['pierre'] = 'xkcd:red'
-CENTROID_COLOR_MAP['feuille'] = 'xkcd:green'
-CENTROID_COLOR_MAP['ciseaux'] = 'xkcd:blue'
+CENTROID_COLOR_MAP["pierre"] = "xkcd:red"
+CENTROID_COLOR_MAP["feuille"] = "xkcd:green"
+CENTROID_COLOR_MAP["ciseaux"] = "xkcd:blue"
 
 # ------------------------------------------------------------------------------
 # helpers
@@ -42,8 +42,8 @@ def centroid_from_points(points):
 
 
 def points_per_label(recordpath):
-    with open(recordpath, 'rb') as record:
-        rows = csv.reader(record, delimiter=';')
+    with open(recordpath, "rb") as record:
+        rows = csv.reader(record, delimiter=";")
 
         # read and group data points by label
         return {group: map(get_point, grouper)
@@ -56,13 +56,13 @@ def points_per_label(recordpath):
 def main(recordpath):
 
     # create surface
-    plt3d = plt.figure().gca(projection='3d')
+    plt3d = plt.figure().gca(projection="3d")
 
-    # ensure that the next plot doesn't overwrite the first plot (?)
+    # ensure that the next plot doesn"t overwrite the first plot (?)
     axis = plt.gca()
-    axis.set_xlabel('circularity')
-    axis.set_ylabel('ellipticity')
-    axis.set_zlabel('convexivity')
+    axis.set_xlabel("circularity")
+    axis.set_ylabel("ellipticity")
+    axis.set_zlabel("convexivity")
     axis.hold(True)
 
     for label, points in points_per_label(recordpath).iteritems():
@@ -80,5 +80,5 @@ def main(recordpath):
 # kickoff
 
 
-if __name__ == '__main__':
-    main('assets/samples.csv')
+if __name__ == "__main__":
+    main("assets/samples.csv")

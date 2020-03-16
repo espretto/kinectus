@@ -76,7 +76,7 @@ def classify_point(point, centroids):
 class HandSignFilter(object):
 
     def __init__(self, canvas, interval, centroids):
-        self.font = pygame.font.SysFont('Arial', PYGAME_FONT_SIZE)
+        self.font = pygame.font.SysFont("Arial", PYGAME_FONT_SIZE)
         self.point = None
         self.frame = None
         self.canvas = canvas
@@ -126,15 +126,15 @@ def main(train_dump):
 
     # read training data for estimates
     if exists(train_dump):
-        logging.info('using centroids from : %s' % train_dump)
+        logging.info("using centroids from : %s" % train_dump)
         centroids = {label: centroid_from_points(points)
                      for label, points in points_per_label(train_dump).iteritems()}
     else:
-        logging.info('no training data available')
+        logging.info("no training data available")
         centroids = {}
 
     # create pygame canvas
-    logging.debug('initializing pygame')
+    logging.debug("initializing pygame")
     pygame.init()
     pygame.display.set_caption("Pierre-Feuille-Ciseaux")
     canvas = pygame.display.set_mode(KINECT_CANVAS_SIZE, 0, KINECT_PIXEL_DEPTH)
@@ -144,14 +144,14 @@ def main(train_dump):
 
     # record handsigns to
     recordpath = datetime.now().strftime("assets/samples/%Y-%m-%d-%H-%M-%S.samples.csv")
-    logging.info('samples path : %s' % recordpath)
+    logging.info("samples path : %s" % recordpath)
 
     # open ressources
     with open(recordpath, "wb") as record, nui.Runtime() as kinect:
 
-        writer = csv.writer(record, delimiter=';')
+        writer = csv.writer(record, delimiter=";")
 
-        logging.debug('initializing kinect stream')
+        logging.debug("initializing kinect stream")
         kinect.depth_frame_ready += hsf.on_depth_frame
         kinect.depth_stream.open(
             nui.ImageStreamType.Depth,
@@ -172,12 +172,12 @@ def main(train_dump):
                 row.extend(["%.6f" % feature for feature in hsf.point])
 
                 writer.writerow(row)
-                logging.info('recorded data point: %s' % ";".join(row))
+                logging.info("recorded data point: %s" % ";".join(row))
 
             elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE or \
                  event.type == pygame.QUIT:
 
-                logging.debug('exiting pygame')
+                logging.debug("exiting pygame")
                 pygame.quit()
                 break
 
@@ -186,4 +186,4 @@ def main(train_dump):
 
 
 if __name__ == "__main__":
-    main('assets/samples.csv')
+    main("assets/samples.csv")
