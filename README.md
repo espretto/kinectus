@@ -1,15 +1,18 @@
 
 Kinectus
 ---
-Kinectus is an image recognition application. It is capable of recognizing the hand-signs rock, paper, scissors within an image. The algorithm is based on an experience/reference model. The feature-vector is composed of the following geometric measurements:
+Kinectus is an image recognition application. It is capable of recognizing the hand-signs rock, paper, scissors within an image. The algorithm is based on an experience/reference model and manual categorisation. The feature-vector is composed of the following geometric measurements:
 
-1. circularity : 4pi * surface / perimeter ^ 2
-2. ellipticity : shortest axis / longest axis
-3. convexivity : convex surface / effective surface
+- circularity : 4pi * surface / perimeter ^ 2
+- ellipticity : shortest axis / longest axis
+- convexivity : convex surface / effective surface
 
-In order to create a reference database, the application allows to store measurements for each hand-sign. Collectively, these measurements form clouds of points in 3d-space (3-feature-vectors). Each cloud's centroid is then used as a reference point for sign recognition, more specifically, the euclidian distance to it.
+In order to create a reference database, the application allows to store measurements for each hand-sign. Collectively, these measurements form clouds of points in 3d-space as shown below.
+<img src="assets/samples.png" width="480px" style="display: block"/>
 
-A video demonstration of the application can be found here [./assets/samples.wmv](assets/samples.wmv).
+Each cloud's geometric centre (centroid) is used as a reference point for hand-sign recognition. The below gif shows the application in action, recognizing hand-signs by finding the closest match by means of the euclidian distance.
+
+![](assets/samples.gif)
 
 Prerequisites
 ---
