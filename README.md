@@ -9,6 +9,7 @@ Kinectus is an image recognition application. It is capable of recognizing the h
 
 In order to create a reference database, the application allows to store measurements for each hand-sign. Collectively, these measurements form clouds of points in 3d-space (3-feature-vectors). Each cloud's centroid is then used as a reference point for sign recognition, more specifically, the euclidian distance to it.
 
+A video demonstration of the application can be found here [./assets/samples.wmv](assets/samples.wmv).
 
 Prerequisites
 ---
