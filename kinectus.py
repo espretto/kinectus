@@ -38,7 +38,8 @@ KEY_HANDSIGN_MAP[pygame.K_f] = "feuille"
 # ------------------------------------------------------------------------------
 # features vector helpers
 
-def point_from_frame (frame):
+
+def point_from_frame(frame):
     frame = label(frame)
     regions = regionprops(frame)
 
@@ -54,10 +55,11 @@ def point_from_frame (frame):
             props.convex_area / props.area if props.area else -1
         ])
 
-def classify_point (point, centroids):
+
+def classify_point(point, centroids):
     min_dist = float("inf")
     min_label = "unknown"
-    
+
     # find centroid with minimum distance
     for label, centroid in centroids.iteritems():
         dist = np.linalg.norm(point-centroid)
@@ -65,12 +67,13 @@ def classify_point (point, centroids):
             min_dist = dist
             min_label = label
 
-    return min_label 
+    return min_label
 
 # ------------------------------------------------------------------------------
 # frame processing middleware
 
-class HandSignFilter (object):
+
+class HandSignFilter(object):
 
     def __init__(self, canvas, interval, centroids):
         self.font = pygame.font.SysFont('Arial', PYGAME_FONT_SIZE)
@@ -81,7 +84,7 @@ class HandSignFilter (object):
         self.interval = interval
         self.centroids = centroids
 
-    def on_depth_frame (self, depth_frame):
+    def on_depth_frame(self, depth_frame):
         if self.canvas.get_locked():
             return
 
@@ -111,24 +114,25 @@ class HandSignFilter (object):
         # update pygame surface
         pygame.display.update()
 
-    def on_depth_frame_simple (self, depth_frame):
+    def on_depth_frame_simple(self, depth_frame):
         depth_frame.image.copy_bits(self.canvas._pixels_address)
         pygame.display.update()
 
 # ------------------------------------------------------------------------------
 # frame processing middleware
 
+
 def main(train_dump):
 
     # read training data for estimates
     if exists(train_dump):
         logging.info('using centroids from : %s' % train_dump)
-        centroids = { label: centroid_from_points(points) \
-            for label, points in points_per_label(train_dump).iteritems() }
+        centroids = {label: centroid_from_points(points)
+                     for label, points in points_per_label(train_dump).iteritems()}
     else:
         logging.info('no training data available')
         centroids = {}
-        
+
     # create pygame canvas
     logging.debug('initializing pygame')
     pygame.init()
@@ -163,7 +167,7 @@ def main(train_dump):
             if event.type == pygame.KEYUP and event.key in KEY_HANDSIGN_MAP:
                 if hsf.point is None:
                     continue
-                
+
                 row = [KEY_HANDSIGN_MAP[event.key]]
                 row.extend(["%.6f" % feature for feature in hsf.point])
 
@@ -172,12 +176,14 @@ def main(train_dump):
 
             elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE or \
                  event.type == pygame.QUIT:
+
                 logging.debug('exiting pygame')
                 pygame.quit()
                 break
 
 # ------------------------------------------------------------------------------
 # kickoff
+
 
 if __name__ == "__main__":
     main('assets/samples.csv')
